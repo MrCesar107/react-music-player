@@ -1,6 +1,6 @@
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { useMusic } from '../hooks/useMusic';
+import { useMusic } from '../contexts/MusicContext';
 
 export const MusicPlayer = () => {
     const {
@@ -17,9 +17,11 @@ export const MusicPlayer = () => {
         isPlaying,
         volume,
         setVolume,
-    }  = useMusic();
+        trackVersion,
+    } = useMusic();
 
     const audioRef = useRef(null);
+    const trackVersionRef = useRef(trackVersion);
 
     const handleTimeChange = (e) => {
         const audio = audioRef.current;
@@ -30,35 +32,25 @@ export const MusicPlayer = () => {
     };
 
     const handleVolumeChange = (e) => {
-        const newVolume = parseFloat(e.target.value);
-        setVolume(newVolume);
+        setVolume(parseFloat(e.target.value));
     };
-
-    useEffect(() => {
-        const audio = audioRef.current;
-
-        if (isPlaying) {
-            audio.play().catch((error) => console.error('Error playing audio:', error));
-        } else {
-            audio.pause();
-        }
-    }, [isPlaying]);
 
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
         audio.volume = volume;
-    }, [volume]);
+    }, [volume, currentSong]);
 
     useEffect(() => {
         const audio = audioRef.current;
-
         if (!audio) return;
 
         const handleLoadedMetadata = () => {
-            setDuration(audio.duration);
+            if (Number.isFinite(audio.duration)) {
+                setDuration(audio.duration);
+            }
         };
-        
+
         const handleTimeUpdate = () => {
             setCurrentTime(audio.currentTime);
         };
@@ -68,21 +60,59 @@ export const MusicPlayer = () => {
         };
 
         audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.addEventListener('canplay', handleLoadedMetadata);
         audio.addEventListener('timeupdate', handleTimeUpdate);
         audio.addEventListener('ended', handleEnded);
 
+        if (audio.readyState >= 1) {
+            handleLoadedMetadata();
+        }
+
         return () => {
             audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            audio.removeEventListener('canplay', handleLoadedMetadata);
             audio.removeEventListener('timeupdate', handleTimeUpdate);
             audio.removeEventListener('ended', handleEnded);
         };
-    }, [setDuration, setCurrentTime, currentSong]);
+    }, [setDuration, setCurrentTime, currentSong, nextSong]);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio || !currentSong) return;
+
+        const songChanged = trackVersionRef.current !== trackVersion;
+        trackVersionRef.current = trackVersion;
+
+        if (songChanged) {
+            setCurrentTime(0);
+            audio.src = currentSong.url;
+            audio.load();
+        }
+
+        if (isPlaying) {
+            audio.play().catch((error) => {
+                if (error?.name !== 'AbortError') {
+                    console.error('Error playing audio:', error);
+                }
+            });
+        } else {
+            audio.pause();
+        }
+    }, [isPlaying, currentSong, trackVersion, setCurrentTime]);
+
+    if (!currentSong) {
+        return (
+            <div className="music-player">
+                <p className="no-track">No songs available</p>
+            </div>
+        );
+    }
 
     const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
-    
+
     return (
         <div className="music-player">
-            <audio ref={audioRef} preload="metadata" crossOrigin="anonymous" src={currentSong.url}/>
+            <audio ref={audioRef} preload="metadata" src={currentSong.url} />
 
             <div className="track-info">
                 <h3 className="track-title">{currentSong.title}</h3>
@@ -90,7 +120,16 @@ export const MusicPlayer = () => {
             </div>
             <div className="progress-container">
                 <span className="time">{formatTime(currentTime)}</span>
-                <input type="range" min="0"  max={duration || 0} step="0.1" value={currentTime || 0} className="progress-bar" onChange={handleTimeChange} style={{"--progress": `${progressPercentage}%`}}/>
+                <input
+                    type="range"
+                    min="0"
+                    max={duration || 0}
+                    step="0.1"
+                    value={currentTime || 0}
+                    className="progress-bar"
+                    onChange={handleTimeChange}
+                    style={{ "--progress": `${progressPercentage}%` }}
+                />
                 <span className="time">{formatTime(duration)}</span>
             </div>
             <div className="controls">
