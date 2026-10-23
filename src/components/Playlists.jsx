@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMusic } from '../contexts/MusicContext';
 
 export const Playlists = () => {
@@ -7,7 +7,23 @@ export const Playlists = () => {
     const [selectedPlaylist, setSelectedPlaylist] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
 
-    const { createPlaylist, playlists, allSongs, addSongToPlaylist, currentSongIndex, handlePlaySong, deletePlaylist } = useMusic();
+    const { createPlaylist, playlists, allSongs, addSongToPlaylist, currentSongIndex, handlePlaySong, deletePlaylist, setPlaylists } = useMusic();
+
+    useEffect(() => {
+        const storedPlaylists = localStorage.getItem("music-player-playlists-react");
+        
+        if (storedPlaylists) {
+            setPlaylists(JSON.parse(storedPlaylists));
+        }
+    }, []);
+
+    useEffect(() => {
+        if (playlists.length > 0) {
+            localStorage.setItem("music-player-playlists-react", JSON.stringify(playlists));
+        } else {
+            localStorage.removeItem("music-player-playlists-react");
+        }
+    }, [playlists]);
 
     const filteredSongs = allSongs.filter((song) => {
         const matches =

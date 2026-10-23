@@ -113,6 +113,7 @@ export const MusicProvider = ({ children }) => {
         createPlaylist,
         addSongToPlaylist,
         deletePlaylist,
+        setPlaylists,
     }), [
         handlePlaySong,
         currentSong,
@@ -130,6 +131,7 @@ export const MusicProvider = ({ children }) => {
         createPlaylist,
         addSongToPlaylist,
         deletePlaylist,
+        setPlaylists,
     ]);
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
