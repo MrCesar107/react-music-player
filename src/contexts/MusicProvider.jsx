@@ -28,6 +28,7 @@ export const MusicProvider = ({ children }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
     const [trackVersion, setTrackVersion] = useState(0);
+    const [playlists, setPlaylists] = useState([]);
 
     const currentSong = songs[currentSongIndex] ?? null;
 
@@ -63,6 +64,30 @@ export const MusicProvider = ({ children }) => {
         setIsPlaying(true);
     }, []);
 
+    const createPlaylist = (name) => {
+        const newPlaylist = {
+            id: Date.now(),
+            name,
+            songs: [],
+        };
+
+        setPlaylists((prev) => [...prev, newPlaylist]);
+    };
+
+    const addSongToPlaylist = (playlistId, song) => {
+        setPlaylists((prev) => prev.map((playlist) => {
+            if (playlist.id === playlistId) {
+                return {...playlist, songs: [...playlist.songs, song]}
+            } else {
+                return playlist;
+            }
+        }))
+    }
+
+    const deletePlaylist = (playlistId) => {
+        setPlaylists((prev) => prev.filter((playlist) => playlist.id !== playlistId));
+    }
+
     const play = useCallback(() => setIsPlaying(true), []);
     const pause = useCallback(() => setIsPlaying(false), []);
 
@@ -84,6 +109,10 @@ export const MusicProvider = ({ children }) => {
         volume,
         setVolume,
         trackVersion,
+        playlists,
+        createPlaylist,
+        addSongToPlaylist,
+        deletePlaylist,
     }), [
         handlePlaySong,
         currentSong,
@@ -97,6 +126,10 @@ export const MusicProvider = ({ children }) => {
         isPlaying,
         volume,
         trackVersion,
+        playlists,
+        createPlaylist,
+        addSongToPlaylist,
+        deletePlaylist,
     ]);
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;

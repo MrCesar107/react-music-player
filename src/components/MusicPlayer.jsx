@@ -18,6 +18,7 @@ export const MusicPlayer = () => {
         volume,
         setVolume,
         trackVersion,
+        deletePlaylist,
     } = useMusic();
 
     const audioRef = useRef(null);
