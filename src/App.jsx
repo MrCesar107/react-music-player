@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { BrowserRouter, Routes, Route } from "react-router";
 
-import { MusicPlayer } from './components/MusicPlayer';
-import { AllSongs } from './components/AllSongs';
-import { Playlists } from './components/Playlists';
-import { MusicProvider } from './contexts/MusicProvider';
-import { Navbar } from './components/Navbar';
+import { MusicPlayer } from "./components/MusicPlayer";
+import { AllSongs } from "./components/AllSongs";
+import { Playlists } from "./components/Playlists";
+import { MusicProvider } from "./contexts/MusicProvider";
+import { Navbar } from "./components/Navbar";
 
 export default function App() {
   return (
@@ -26,5 +26,5 @@ export default function App() {
         </div>
       </MusicProvider>
     </BrowserRouter>
-  )
+  );
 }
